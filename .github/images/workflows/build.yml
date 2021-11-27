@@ -1,0 +1,28 @@
+name: dotnet package
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup .NET Core SDK 6.0
+        uses: actions/setup-dotnet@v1.7.2
+        with:
+          dotnet-version: 6.0.x
+      - name: Install dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+      - name: Test
+        run: dotnet test --no-restore --verbosity normal
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-results
+          path: bin
+        # Use always() to always run this step to publish test results when there are test failures
+        if: ${{ always() }}
