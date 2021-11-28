@@ -32,6 +32,9 @@ namespace NvidiaDrivers.Nvidia {
             // Fetch downloadUrl.
             HttpResponseMessage response = client.GetAsync(downloadUrl).Result;
             string downloadPage = response.Content.ReadAsStringAsync().Result;
+            if (downloadPage.Contains("No certified downloads were found for this configuration")) {
+                return (false, "");
+            }
             var web = new HtmlWeb();
             var doc = web.Load(downloadPage);
 

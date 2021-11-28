@@ -18,7 +18,17 @@ namespace NvidiaDrivers
         public MainWindow()
         {
             InitializeComponent();
+            ContentRendered += MainWindow_ContentRendered;
+        }
 
+        // Open url on button click.
+        private void Button_Click(object sender, RoutedEventArgs e) {
+            Button button = (Button)sender;
+            string url = (string)button.Tag;
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+        }
+
+        public void MainWindow_ContentRendered(object sender, EventArgs e) {
             (bool, string) result = Nvidia.API.IsNewDriver();
             Grid appGrid = (Grid)this.FindName("appGrid");
 
@@ -28,7 +38,7 @@ namespace NvidiaDrivers
             gpuName.Text += $" ({guessedGpu})";
 
 
-            if (result.Item1) {
+            if (!result.Item1) {
                 // Show new driver available in application window.
                 textBlock.Text = "New NVIDIA driver found!";
                 // Create a button with a link.
@@ -45,15 +55,8 @@ namespace NvidiaDrivers
                 Grid.SetColumn(button, 1);
                 Grid.SetRow(button, 2);
             } else {
-                textBlock.Text = "You're up to date!";
+                textBlock.Text = "You're up to date!\n(or unknown GPU)";
             }
-        }
-
-        // Open url on button click.
-        private void Button_Click(object sender, RoutedEventArgs e) {
-            Button button = (Button)sender;
-            string url = (string)button.Tag;
-            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
         }
 
     }
