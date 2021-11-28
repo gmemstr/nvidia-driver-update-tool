@@ -38,7 +38,7 @@ namespace NvidiaDrivers
             gpuName.Text += $" ({guessedGpu})";
 
 
-            if (!result.Item1) {
+            if (result.Item1) {
                 // Show new driver available in application window.
                 textBlock.Text = "New NVIDIA driver found!";
                 // Create a button with a link.
