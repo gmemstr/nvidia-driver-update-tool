@@ -40,7 +40,7 @@ namespace NvidiaDrivers.Nvidia {
 
             var element = doc.DocumentNode.SelectSingleNode("//*[@id=\"tdReleaseDate\"]").InnerText.Trim();
             // Parse date from "2021.11.16"
-            DateTime.TryParseExact(element, "yyyy.MM.dd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime releaseDate);            // If release date is newer than driver date, print it.
+            DateTime.TryParseExact(element, "yyyy.M.dd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime releaseDate);            // If release date is newer than driver date, print it.
             if (releaseDate > gpu.Item2) {
                 return (true, downloadPage);
             }
