@@ -6,8 +6,11 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Collections.Generic;
 using System.Management;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
+using NvAPIWrapper;
+using NvAPIWrapper.GPU;
 
 namespace NvidiaDrivers.Nvidia {
     public class API {
@@ -16,7 +19,7 @@ namespace NvidiaDrivers.Nvidia {
         public static (bool, string) IsNewDriver() {
             ManagementObjectSearcher searcher = new ManagementObjectSearcher("SELECT * FROM Win32_VideoController");
 
-            (string, DateTime) gpu = GPU.Current();
+            (string, decimal) gpu = GPU.Current();
 
             // split graphics card name into vendor and model
             string[] gpuSplit = gpu.Item1.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
@@ -38,10 +41,9 @@ namespace NvidiaDrivers.Nvidia {
             var web = new HtmlWeb();
             var doc = web.Load(downloadPage);
 
-            var element = doc.DocumentNode.SelectSingleNode("//*[@id=\"tdReleaseDate\"]").InnerText.Trim();
-            // Parse date from "2021.11.16"
-            DateTime.TryParseExact(element, "yyyy.M.dd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime releaseDate);            // If release date is newer than driver date, print it.
-            if (releaseDate > gpu.Item2) {
+            var element = doc.DocumentNode.SelectSingleNode("//*[@id=\"tdVersion\"]").InnerText.Trim().Replace("WHQL", "").Replace("&nbsp;", "");
+            decimal parsedLatest = decimal.Parse(element);
+            if (gpu.Item2 < parsedLatest) {
                 return (true, downloadPage);
             }
             else {
@@ -51,7 +53,7 @@ namespace NvidiaDrivers.Nvidia {
 
         // Attempts to guess series of card based on various factors. Currently does not support notebooks.
         public static string GuessGPU() {
-            (string, DateTime) gpu = GPU.Current();
+            (string, decimal) gpu = GPU.Current();
 
             // split graphics card name into vendor and model
             string[] gpuSplit = gpu.Item1.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
@@ -144,23 +146,13 @@ namespace NvidiaDrivers.Nvidia {
     public class GPU {
         public String Name { get; set; }
 
-        public static (string, DateTime) Current() {
-             ManagementObjectSearcher searcher = new ManagementObjectSearcher("SELECT * FROM Win32_VideoController");
+        public static (string, decimal) Current()
+        {
+            PhysicalGPU[] gpus = NvAPIWrapper.GPU.PhysicalGPU.GetPhysicalGPUs();
+            PhysicalGPU gpu = gpus[0];
+            decimal driver = NVIDIA.DriverVersion * 0.01m;
 
-            string graphicsCard = string.Empty;
-            DateTime driverDate = DateTime.Now;
-            foreach (ManagementObject mo in searcher.Get()) {
-                foreach (PropertyData property in mo.Properties) {
-                    if (property.Name == "Description") {
-                        graphicsCard = property.Value.ToString();
-                    }
-                    if (property.Name == "DriverDate") {
-                        driverDate = DateTime.ParseExact(property.Value.ToString().Substring(0, 8), "yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture);
-                    }
-                }
-            }
-
-            return (graphicsCard, driverDate);
+            return (gpu.FullName, driver);
         }
     }
 

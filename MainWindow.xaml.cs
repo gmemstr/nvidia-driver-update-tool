@@ -32,7 +32,7 @@ namespace NvidiaDrivers
             (bool, string) result = Nvidia.API.IsNewDriver();
             Grid appGrid = (Grid)this.FindName("appGrid");
 
-            (string, DateTime) gpu = GPU.Current();
+            (string, decimal) gpu = GPU.Current();
             gpuName.Text = gpu.Item1;
             string guessedGpu = API.GuessGPU();
             gpuName.Text += $" ({guessedGpu})";
